@@ -2,6 +2,17 @@
 
 Test scrapers in Stash quickly and efficiently.
 
+## Requirements
+
+- Python 3.8 (should work with >= 3.6)
+- [`Pillow`](https://pypi.org/project/Pillow) >= 8.0.0 (for displaying the scraped image)
+- [`PyYAML`](https://pypi.org/project/PyYAML) >= 5.2
+- [`requests`](https://pypi.org/project/requests) >= 2.20.0
+
+```
+pip install -r requirements.txt
+```
+
 ## Usage
 
 ```
