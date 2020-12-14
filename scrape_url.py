@@ -459,7 +459,7 @@ def main():
     parser.add_argument('-t', '--type', default='scene', choices=['scene', 'gallery'],
                         help='Type of scraped object.')
     parser.add_argument('-r', '--reload', action='store_true',
-                        help='Reload scrapers.')
+                        help='Reload scrapers before scraping.')
 
     parser.add_argument('url',
                         help='URL to scrape.')

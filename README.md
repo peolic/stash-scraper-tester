@@ -5,7 +5,7 @@ Test scrapers in Stash quickly and efficiently.
 ## Usage
 
 ```
-usage: scrape_url.py [-h] [-c CONFIG] [-p PASSWORD] [-t {scene,gallery}] [-r] url
+scrape_url.py [-h] [-c CONFIG] [-p PASSWORD] [-t {scene,gallery}] [-r] url
 
 positional arguments:
   url                   URL to scrape.
@@ -18,7 +18,7 @@ optional arguments:
                         Stash password, if set. Required in order to use GraphQL.
   -t {scene,gallery}, --type {scene,gallery}
                         Type of scraped object.
-  -r, --reload          Reload scrapers.
+  -r, --reload          Reload scrapers before scraping.
 ```
 
 ### Example:
