@@ -6,9 +6,10 @@ import argparse
 import json
 import sys
 from pathlib import Path
+from string import Template
 from textwrap import dedent, indent
-from urllib.parse import urljoin
 from typing import Any, Dict, List, Literal, Optional
+from urllib.parse import urljoin
 
 import requests
 import yaml
@@ -63,7 +64,7 @@ class GQLQuery():
 
     def __init__(self) -> None:
         self.operation_name: str = ''
-        self.mutation_name: str = ''
+        self.object_name: str = ''
         self.variables: Dict[str, Any] = {}
 
     def __str__(self) -> str:
@@ -76,22 +77,29 @@ class GQLQuery():
             'variables': self.variables,
         }
 
+    def template_to_query(self, tmpl: Template) -> str:
+        return tmpl.safe_substitute(
+            operation_name=self.operation_name,
+            object_name=self.object_name,
+        )
+
 
 class MutationReloadScrapers(GQLQuery):
     """ReloadScrapers Mutation"""
 
     def __init__(self) -> None:
         self.operation_name: str = 'ReloadScrapers'
-        self.mutation_name: str = 'reloadScrapers'
+        self.object_name: str = 'reloadScrapers'
         self.variables: Dict[str, Any] = {}
 
     def __str__(self) -> str:
         # https://github.com/stashapp/stash/blob/v0.4.0/graphql/documents/mutations/scrapers.graphql
-        return dedent("""\
-            mutation """ + self.operation_name + """ {
-                """ + self.mutation_name + """
-            }\
-        """)
+        tmpl = Template(dedent("""
+            mutation $operation_name {
+                $object_name
+            }
+        """).strip())
+        return self.template_to_query(tmpl)
 
 
 class QueryScrapeSceneURL(GQLQuery):
@@ -99,7 +107,7 @@ class QueryScrapeSceneURL(GQLQuery):
 
     def __init__(self) -> None:
         self.operation_name: str = 'ScrapeSceneURL'
-        self.mutation_name: str = 'scrapeSceneURL'
+        self.object_name: str = 'scrapeSceneURL'
         self.variables: Dict[str, Any] = {}
 
     @property
@@ -112,9 +120,9 @@ class QueryScrapeSceneURL(GQLQuery):
 
     def __str__(self) -> str:
         # https://github.com/stashapp/stash/blob/v0.4.0/graphql/documents/queries/scrapers/scrapers.graphql
-        return dedent("""\
-            query """ + self.operation_name + """($url: String!) {
-                """ + self.mutation_name + """(url: $url) {
+        tmpl = Template(dedent("""
+            query $operation_name($url: String!) {
+                $object_name(url: $url) {
                     title
                     details
                     url
@@ -138,8 +146,9 @@ class QueryScrapeSceneURL(GQLQuery):
                         name
                     }
                 }
-            }\
-        """)
+            }
+        """).strip())
+        return self.template_to_query(tmpl)
 
 
 class QueryScrapeGalleryURL(GQLQuery):
@@ -147,7 +156,7 @@ class QueryScrapeGalleryURL(GQLQuery):
 
     def __init__(self) -> None:
         self.operation_name: str = 'ScrapeGalleryURL'
-        self.mutation_name: str = 'scrapeGalleryURL'
+        self.object_name: str = 'scrapeGalleryURL'
         self.variables: Dict[str, Any] = {}
 
     @property
@@ -160,9 +169,9 @@ class QueryScrapeGalleryURL(GQLQuery):
 
     def __str__(self) -> str:
         # https://github.com/stashapp/stash/blob/v0.4.0/graphql/documents/queries/scrapers/scrapers.graphql
-        return dedent("""\
-            query """ + self.operation_name + """($url: String!) {
-                """ + self.mutation_name + """(url: $url) {
+        tmpl = Template(dedent("""
+            query $operation_name($url: String!) {
+                $object_name(url: $url) {
                     title
                     details
                     url
@@ -181,8 +190,9 @@ class QueryScrapeGalleryURL(GQLQuery):
                         url
                     }
                 }
-            }\
-        """)
+            }
+        """).strip())
+        return self.template_to_query(tmpl)
 
 
 class StashAuthenticationFailed(Exception):
@@ -258,7 +268,7 @@ class StashInterface:
         if not data:
             return
 
-        return data[query.mutation_name]
+        return data[query.object_name]
 
     def reload_scrapers(self) -> Optional[bool]:
         print('Reloading scrapers...')
