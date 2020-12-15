@@ -195,7 +195,7 @@ class QueryScrapeGalleryURL(GQLQuery):
         return self.template_to_query(tmpl)
 
 
-class StashAuthenticationFailed(Exception):
+class StashAuthenticationError(Exception):
     pass
 
 
@@ -211,8 +211,7 @@ class StashInterface:
         self.session.verify = VERIFY_TLS
 
         if username and password:
-            if not self._login(username, password):
-                raise StashAuthenticationFailed
+            self._login(username, password)
 
     def _login(self, username: str, password: str):
         print('Authenticating with Stash...')
@@ -222,7 +221,7 @@ class StashInterface:
                 method='POST',
                 url=urljoin(self.base_url, '/login'),
                 headers={
-                    'Content-Type': 'application/x-www-form-urlencoded'
+                    'Content-Type': 'application/x-www-form-urlencoded',
                 },
                 data={
                     'username': username,
@@ -231,14 +230,12 @@ class StashInterface:
                 },
             )
         except requests.exceptions.RequestException as error:
-            print(f'Unable to authenticate with Stash: {error}')
-            return
+            raise StashAuthenticationError('Unable to authenticate with Stash') from error
 
         try:
             response.raise_for_status()
         except requests.exceptions.HTTPError as error:
-            print(f'Unexpected response from Stash while authenticating: {error}')
-            return
+            raise StashAuthenticationError('Unexpected response from Stash while authenticating') from error
 
         return 'Set-Cookie' in response.headers
 
@@ -422,8 +419,8 @@ def run(args: 'Arguments'):
 
     try:
         stash = StashInterface(cfg.stash_url, cfg.username, args.password)
-    except StashAuthenticationFailed:
-        return
+    except StashAuthenticationError:
+        raise
 
     if args.reload:
         reloaded = stash.reload_scrapers()
