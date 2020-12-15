@@ -38,6 +38,16 @@ def show_image(image: str):
         im.show()
 
 
+def ask(q: str, default: bool) -> bool:
+    d_answer, d_str = ('y', '[Y/n]') if default else ('n', '[y/N]')
+    answer = input(f'{q} {d_str} >> ').strip().lower()
+    if not answer or answer == d_answer:
+        return default
+    if answer not in ('y', 'n'):
+        raise ValueError('Invalid answer!')
+    return not default
+
+
 class Config:
     def __init__(self, cfg: Dict[str, Any]) -> None:
         _host = cfg.get('host') or 'localhost'
@@ -362,9 +372,7 @@ def print_scene(scraped_scene: Dict[str, Any]) -> None:
         print('EXTRA DATA:')
         print(json.dumps(scraped_scene, sort_keys=True, indent=2))
 
-    if image:
-        answer = input('\nShow image using default image viewer? [y/N] >> ').strip().lower()
-        if answer == 'y':
+    if image and ask('\nShow image using default image viewer?', default=False):
             show_image(image)
 
 
@@ -475,7 +483,10 @@ def main():
 
     args = parser.parse_args(namespace=Arguments())
 
-    run(args)
+    try:
+        run(args)
+    except (KeyboardInterrupt, SystemExit):
+        pass
 
 
 if __name__ == '__main__':
