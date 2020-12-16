@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 from string import Template
 from textwrap import dedent, indent
-from typing import Any, Dict, List, Literal, Optional
+from typing import Any, Dict, Generator, List, Literal, Optional
 from urllib.parse import urljoin
 
 import requests
@@ -373,7 +373,7 @@ def print_scene(scraped_scene: Dict[str, Any]) -> None:
         print(json.dumps(scraped_scene, sort_keys=True, indent=2))
 
     if image and ask('\nShow image using default image viewer?', default=False):
-            show_image(image)
+        show_image(image)
 
 
 def print_gallery(scraped_gallery: Dict[str, Any]) -> None:
@@ -412,6 +412,27 @@ def print_gallery(scraped_gallery: Dict[str, Any]) -> None:
         print(json.dumps(scraped_gallery, sort_keys=True, indent=2))
 
 
+def url_generator(args: 'Arguments') -> Generator[str, None, None]:
+    if not args.urls:
+        url = input(f'\nEnter first URL to scrape:\n>> ').strip()
+        while url:
+            yield url
+            url = input(f'\nEnter next URL to scrape (empty to stop):\n>> ').strip()
+        return
+
+    if args.is_list:
+        list_path = Path(args.urls)
+        try:
+            urls = list_path.read_text('utf-8').strip().splitlines()
+        except Exception as error:
+            print(f'Error: Unable to read file {list_path}: {error!r}')
+            raise StopIteration
+    else:
+        urls = args.urls.splitlines()
+
+    yield from filter(None, map(str.strip, urls))
+
+
 def run(args: 'Arguments'):
     config_path = Path(args.config)
     try:
@@ -436,27 +457,32 @@ def run(args: 'Arguments'):
             print('Failed to reload')
             return
 
-    if args.type == 'scene':
-        scrape_result = stash.scrape_scene_url(args.url)
-        if not scrape_result:
-            print('Failed')
-            return
+    for idx, url in enumerate(url_generator(args), 1):
+        if idx > 1 and not ask(f'\nContinue?', default=True):
+            break
 
-        print()
-        print_scene(scrape_result)
+        if args.type == 'scene':
+            scrape_result = stash.scrape_scene_url(url)
+            if not scrape_result:
+                print(f'{url} : Failed')
+                continue
 
-    elif args.type == 'gallery':
-        scrape_result = stash.scrape_gallery_url(args.url)
-        if not scrape_result:
-            print('Failed')
-            return
+            print()
+            print_scene(scrape_result)
 
-        print()
-        print_gallery(scrape_result)
+        elif args.type == 'gallery':
+            scrape_result = stash.scrape_gallery_url(url)
+            if not scrape_result:
+                print(f'{url} : Failed')
+                continue
+
+            print()
+            print_gallery(scrape_result)
 
 
 class Arguments(argparse.Namespace):
-    url: str
+    urls: str
+    is_list: bool
 
     config: str
     password: str
@@ -478,10 +504,22 @@ def main():
     parser.add_argument('-r', '--reload', action='store_true',
                         help='Reload scrapers before scraping.')
 
-    parser.add_argument('url',
-                        help='URL to scrape.')
+
+    parser.add_argument('-l', '--list', dest='is_list', action='store_true',
+                        help='Load URLs list from the provided list file path.')
+
+    parser.add_argument('urls', nargs='?',
+                        help=(
+                            'URL(s) to scrape - one per line,'
+                            ' a path to a list file (with `--list`),'
+                            ' or nothing for continuous input.'
+                        ))
 
     args = parser.parse_args(namespace=Arguments())
+
+    if args.is_list and not args.urls:
+        print('Error: `--list` requires a file path.')
+        return
 
     try:
         run(args)

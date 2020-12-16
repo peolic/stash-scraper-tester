@@ -16,10 +16,12 @@ pip install -r requirements.txt
 ## Usage
 
 ```
-scrape_url.py [-h] [-c CONFIG] [-p PASSWORD] [-t {scene,gallery}] [-r] url
+scrape_url.py [-h] [-c CONFIG] [-p PASSWORD] [-t {scene,gallery}] [-r] [-l] [urls]
 
 positional arguments:
-  url                   URL to scrape.
+  urls                  URL(s) to scrape - one per line,
+                        a path to a list file (with `--list`),
+                        or nothing for continuous input.
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -30,6 +32,7 @@ optional arguments:
   -t {scene,gallery}, --type {scene,gallery}
                         Type of scraped object.
   -r, --reload          Reload scrapers before scraping.
+  -l, --list            Load URLs list from the provided list file path.
 ```
 
 ### Example:
