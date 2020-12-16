@@ -334,7 +334,7 @@ def print_scene(scraped_scene: Dict[str, Any]) -> None:
     date: Optional[str] = scraped_scene.pop('date')
 
     details: Optional[str] = scraped_scene.pop('details')
-    details_p = indent(details, '  ') if details is not None else details
+    details_p = ('{\n' + indent(details, '  ') + '\n}') if details is not None else details
 
     url: Optional[str] = scraped_scene.pop('url')
 
@@ -361,7 +361,7 @@ def print_scene(scraped_scene: Dict[str, Any]) -> None:
     print(f'Date: {date!r}')
     print(f'Image: {image_p}')
     print(f'URL: {url!r}')
-    print(f'Details: {{\n{details_p}\n}}')
+    print(f'Details: {details_p}')
     print(f'Studio: {studio_p!r}')
     print(f'Tags ({try_len(tags)}):\n  {tags_p}')
     print(f'Performers ({try_len(performers)}):\n  {performers_p}')
@@ -381,7 +381,7 @@ def print_gallery(scraped_gallery: Dict[str, Any]) -> None:
     date: Optional[str] = scraped_gallery.pop('date')
 
     details: Optional[str] = scraped_gallery.pop('details')
-    details_p = indent(details, '  ') if details is not None else details
+    details_p = ('{\n' + indent(details, '  ') + '\n}') if details is not None else details
 
     url: Optional[str] = scraped_gallery.pop('url')
 
@@ -401,7 +401,7 @@ def print_gallery(scraped_gallery: Dict[str, Any]) -> None:
     print(f'Title: {title!r}')
     print(f'Date: {date!r}')
     print(f'URL: {url!r}')
-    print(f'Details: {{\n{details_p}\n}}')
+    print(f'Details: {details_p}')
     print(f'Studio: {studio_p!r}')
     print(f'Tags ({try_len(tags)}):\n  {tags_p}')
     print(f'Performers ({try_len(performers)}):\n  {performers_p}')
