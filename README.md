@@ -30,7 +30,7 @@ optional arguments:
   -p PASSWORD, --password PASSWORD
                         Stash password, if set. Required in order to use GraphQL.
   -t {scene,gallery}, --type {scene,gallery}
-                        Type of scraped object.
+                        Type of scraped object (default is "scene").
   -r, --reload          Reload scrapers before scraping.
   -l, --list            Load URLs list from the provided list file path.
 ```

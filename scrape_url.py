@@ -500,26 +500,34 @@ class Arguments(argparse.Namespace):
 def main():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('-c', '--config', default=str(DEFAULT_STASH_PATH / 'config.yml'),
-                        help='Stash config path.')
-    parser.add_argument('-p', '--password',
-                        help='Stash password, if set. Required in order to use GraphQL.')
+    parser.add_argument(
+        '-c', '--config', default=str(DEFAULT_STASH_PATH / 'config.yml'),
+        help='Stash config path.',
+    )
+    parser.add_argument(
+        '-p', '--password',
+        help='Stash password, if set. Required in order to use GraphQL.',
+    )
 
-    parser.add_argument('-t', '--type', default='scene', choices=['scene', 'gallery'],
-                        help='Type of scraped object.')
-    parser.add_argument('-r', '--reload', action='store_true',
-                        help='Reload scrapers before scraping.')
+    parser.add_argument(
+        '-t', '--type', default='scene', choices=['scene', 'gallery'],
+        help='Type of scraped object (default is "scene").',
+    )
+    parser.add_argument(
+        '-r', '--reload', action='store_true',
+        help='Reload scrapers before scraping.',
+    )
 
 
-    parser.add_argument('-l', '--list', dest='is_list', action='store_true',
-                        help='Load URLs list from the provided list file path.')
+    parser.add_argument(
+        '-l', '--list', dest='is_list', action='store_true',
+        help='Load URLs list from the provided list file path.',
+    )
 
-    parser.add_argument('urls', nargs='?',
-                        help=(
-                            'URL(s) to scrape - one per line,'
-                            ' a path to a list file (with `--list`),'
-                            ' or nothing for continuous input.'
-                        ))
+    parser.add_argument(
+        'urls', nargs='?',
+        help='URL(s) to scrape - one per line, a path to a list file (with `--list`), or nothing for continuous input.',
+    )
 
     args = parser.parse_args(namespace=Arguments())
 
