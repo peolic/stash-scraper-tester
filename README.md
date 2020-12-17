@@ -16,7 +16,7 @@ pip install -r requirements.txt
 ## Usage
 
 ```
-scrape_url.py [-h] [-c CONFIG] [-p PASSWORD] [-t {scene,gallery}] [-r] [-l] [urls]
+scrape_url.py [-h] [-c CONFIG] [-p PASSWORD] [-t {scene,gallery}] [-nr] [-l] [urls]
 
 positional arguments:
   urls                  URL(s) to scrape - one per line,
@@ -31,7 +31,7 @@ optional arguments:
                         Stash password, if set. Required in order to use GraphQL.
   -t {scene,gallery}, --type {scene,gallery}
                         Type of scraped object (default is "scene").
-  -r, --reload          Reload scrapers before scraping.
+  -nr, --no-reload      Disable reloading the scrapers and clearing the scraper cache before scraping.
   -l, --list            Load URLs list from the provided list file path.
 ```
 

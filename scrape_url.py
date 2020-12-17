@@ -514,8 +514,8 @@ def main():
         help='Type of scraped object (default is "scene").',
     )
     parser.add_argument(
-        '-r', '--reload', action='store_true',
-        help='Reload scrapers before scraping.',
+        '-nr', '--no-reload', dest='reload', action='store_false',
+        help='Disable reloading the scrapers and clearing the scraper cache before scraping.',
     )
 
 
