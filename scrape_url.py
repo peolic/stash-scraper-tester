@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 from string import Template
 from textwrap import dedent, indent
-from typing import Any, Dict, Generator, List, Literal, Optional
+from typing import Any, Dict, Generator, List, Literal, Optional, Tuple, Union
 from urllib.parse import urljoin
 
 import requests
@@ -412,13 +412,15 @@ def print_gallery(scraped_gallery: Dict[str, Any]) -> None:
         print(json.dumps(scraped_gallery, sort_keys=True, indent=2))
 
 
-def url_generator(args: 'Arguments') -> Generator[str, None, None]:
+def url_generator(args: 'Arguments') -> Tuple[Union[Generator[str, None, None], List[str]], Optional[int]]:
     if not args.urls:
-        url = input(f'\nEnter first URL to scrape:\n>> ').strip()
-        while url:
-            yield url
-            url = input(f'\nEnter next URL to scrape (empty to stop):\n>> ').strip()
-        return
+        def _generator() -> Generator[str, None, None]:
+            url = input(f'\nEnter first URL to scrape:\n>> ').strip()
+            while url:
+                yield url
+                url = input(f'\nEnter next URL to scrape (empty to stop):\n>> ').strip()
+
+        return _generator(), None
 
     if args.is_list:
         list_path = Path(args.urls)
@@ -430,7 +432,9 @@ def url_generator(args: 'Arguments') -> Generator[str, None, None]:
     else:
         urls = args.urls.splitlines()
 
-    yield from filter(None, map(str.strip, urls))
+    urls = list(filter(None, map(str.strip, urls)))
+
+    return urls, len(urls)
 
 
 def run(args: 'Arguments'):
@@ -457,8 +461,10 @@ def run(args: 'Arguments'):
             print('Failed to reload')
             return
 
-    for idx, url in enumerate(url_generator(args), 1):
-        if idx > 1 and not ask(f'\nContinue?', default=True):
+    url_gen, total = url_generator(args)
+
+    for idx, url in enumerate(url_gen, 1):
+        if total and idx > 1 and not ask(f'\nContinue?', default=True):
             break
 
         if args.type == 'scene':
