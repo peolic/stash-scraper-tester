@@ -256,7 +256,11 @@ class StashInterface:
             url=self.endpoint,
             json=json_data,
         )
-        result = response.json()
+        try:
+            result = response.json()
+        except ValueError:
+            print(f'ERROR: Invalid API response ({response.status_code}):\n{response.text}')
+            return
 
         if 'errors' in result:
             print('GraphQL Errors:')
@@ -415,10 +419,10 @@ def print_gallery(scraped_gallery: Dict[str, Any]) -> None:
 def url_generator(args: 'Arguments') -> Tuple[Union[Generator[str, None, None], List[str]], Optional[int]]:
     if not args.urls:
         def _generator() -> Generator[str, None, None]:
-            url = input(f'\nEnter first URL to scrape:\n>> ').strip()
+            url = input('\nEnter first URL to scrape:\n>> ').strip()
             while url:
                 yield url
-                url = input(f'\nEnter next URL to scrape (empty to stop):\n>> ').strip()
+                url = input('\nEnter next URL to scrape (empty to stop):\n>> ').strip()
 
         return _generator(), None
 
@@ -464,7 +468,7 @@ def run(args: 'Arguments'):
     url_gen, total = url_generator(args)
 
     for idx, url in enumerate(url_gen, 1):
-        if total and idx > 1 and not ask(f'\nContinue?', default=True):
+        if total and idx > 1 and not ask('\nContinue?', default=True):
             break
 
         if args.type == 'scene':
@@ -517,7 +521,6 @@ def main():
         '-nr', '--no-reload', dest='reload', action='store_false',
         help='Disable reloading the scrapers and clearing the scraper cache before scraping.',
     )
-
 
     parser.add_argument(
         '-l', '--list', dest='is_list', action='store_true',
