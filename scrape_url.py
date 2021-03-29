@@ -55,6 +55,7 @@ class Config:
         self.port: str = str(cfg.get('port') or 9999)
         self.username: str = cfg.get('username') or ''
         self.password_set: bool = bool(cfg.get('password'))
+        self.api_key: str = cfg.get('api_key') or ''
 
         self.ssl: bool = (DEFAULT_STASH_PATH / 'stash.crt').is_file() and (DEFAULT_STASH_PATH / 'stash.key').is_file()
 
@@ -210,8 +211,8 @@ class StashAuthenticationError(Exception):
 
 
 class StashInterface:
-    def __init__(self, base_url: str, username: Optional[str], password: Optional[str]):
-        self.base_url = base_url
+    def __init__(self, cfg: Config, password: Optional[str] = None):
+        self.base_url = cfg.stash_url
         self.endpoint = urljoin(self.base_url, '/graphql')
 
         self.session = requests.Session()
@@ -220,8 +221,12 @@ class StashInterface:
         })
         self.session.verify = VERIFY_TLS
 
-        if username and password:
-            self._login(username, password)
+        if cfg.api_key:
+            self.session.headers.update({
+                'ApiKey': cfg.api_key,
+            })
+        elif cfg.username and password:
+            self._login(cfg.username, password)
 
     def _login(self, username: str, password: str):
         print('Authenticating with Stash...')
@@ -450,12 +455,12 @@ def run(args: 'Arguments'):
         print(f'Unable to load Stash config from {config_path}')
         return
 
-    if cfg.password_set and not args.password:
+    if cfg.password_set and not (cfg.api_key or args.password):
         print(f'Password required for user {cfg.username}, provide it using `-p password`.')
         return
 
     try:
-        stash = StashInterface(cfg.stash_url, cfg.username, args.password)
+        stash = StashInterface(cfg, args.password)
     except StashAuthenticationError:
         raise
 
