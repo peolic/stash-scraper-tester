@@ -161,6 +161,46 @@ class QueryScrapeSceneURL(GQLQuery):
         """).strip())
         return self.template_to_query(tmpl)
 
+class QueryScrapeMovieURL(GQLQuery):
+    """ScrapeMovieURL Query"""
+
+    def __init__(self) -> None:
+        self.operation_name: str = 'ScrapeMovieURL'
+        self.object_name: str = 'scrapeMovieURL'
+        self.variables: Dict[str, Any] = {}
+
+    @property
+    def url(self) -> Optional[str]:
+        return self.variables.get('url')
+
+    @url.setter
+    def url(self, url: str) -> None:
+        self.variables['url'] = url
+
+    def __str__(self) -> str:
+        # https://github.com/stashapp/stash/blob/v0.4.0/graphql/documents/queries/scrapers/scrapers.graphql
+        tmpl = Template(dedent("""
+            query $operation_name($url: String!) {
+                $object_name(url: $url) {
+                    name
+                    aliases
+                    date
+                    duration
+                    synopsis
+                    url
+                    rating
+                    director
+
+                    studio {
+                        name
+                    }
+
+                    front_image
+                    back_image
+                }
+            }
+        """).strip())
+        return self.template_to_query(tmpl)
 
 class QueryScrapeGalleryURL(GQLQuery):
     """ScrapeGalleryURL Query"""
@@ -311,6 +351,19 @@ class StashInterface:
 
         return results
 
+    def scrape_movie_url(self, url: str) -> Optional[Dict[str, Any]]:
+        print(f'Scraping movie URL {url}')
+
+        query = QueryScrapeMovieURL()
+        query.url = url
+
+        results = self._call(query)
+
+        if not results:
+            return
+
+        return results
+
     def scrape_gallery_url(self, url: str) -> Optional[Dict[str, Any]]:
         print(f'Scraping gallery URL {url}')
 
@@ -383,6 +436,51 @@ def print_scene(scraped_scene: Dict[str, Any]) -> None:
 
     if image and ask('\nShow image using default image viewer?', default=False):
         show_image(image)
+
+
+def print_movie(scraped_movie: Dict[str, Any]) -> None:
+    name: Optional[str] = scraped_movie.pop('name')
+    aliases: Optional[str] = scraped_movie.pop('aliases')
+    date: Optional[str] = scraped_movie.pop('date')
+    duration: Optional[str] = scraped_movie.pop('duration')
+
+    synopsis: Optional[str] = scraped_movie.pop('synopsis')
+    synopsis_p = ('{\n' + indent(synopsis, '  ') + '\n}') if synopsis is not None else synopsis
+
+    url: Optional[str] = scraped_movie.pop('url')
+
+    rating: Optional[str] = scraped_movie.pop('rating')
+    director: Optional[str] = scraped_movie.pop('director')
+
+    front_image: Optional[str] = scraped_movie.pop('front_image')
+    front_image_p: str = 'Yes' if front_image else 'No'
+    back_image: Optional[str] = scraped_movie.pop('back_image')
+    back_image_p: str = 'Yes' if back_image else 'No'
+
+    studio: Optional[Dict[Literal['name', 'url'], str]] = scraped_movie.pop('studio')
+    studio_p = (studio.get('name'), studio.get('url')) if studio is not None else studio
+
+    print(f'Name: {name!r}')
+    print(f'Aliases: {aliases!r}')
+    print(f'Date: {date!r}')
+    print(f'Duration: {duration!r}')
+    print(f'Front Image: {front_image_p}')
+    print(f'Back Image: {back_image_p}')
+    print(f'URL: {url!r}')
+    print(f'Rating: {rating!r}')
+    print(f'Director: {director!r}')
+    print(f'Synopsis: {synopsis_p}')
+    print(f'Studio: {studio_p!r}')
+
+    if scraped_movie:
+        print()
+        print('EXTRA DATA:')
+        print(json.dumps(scraped_movie, sort_keys=True, indent=2))
+
+    if front_image and ask('\nShow front image using default image viewer?', default=False):
+        show_image(front_image)
+    if back_image and ask('\nShow back image using default image viewer?', default=False):
+        show_image(back_image)
 
 
 def print_gallery(scraped_gallery: Dict[str, Any]) -> None:
@@ -485,6 +583,15 @@ def run(args: 'Arguments'):
             print()
             print_scene(scrape_result)
 
+        elif args.type == 'movie':
+            scrape_result = stash.scrape_movie_url(url)
+            if not scrape_result:
+                print(f'{url} : Failed')
+                continue
+
+            print()
+            print_movie(scrape_result)
+
         elif args.type == 'gallery':
             scrape_result = stash.scrape_gallery_url(url)
             if not scrape_result:
@@ -519,7 +626,7 @@ def main():
     )
 
     parser.add_argument(
-        '-t', '--type', default='scene', choices=['scene', 'gallery'],
+        '-t', '--type', default='scene', choices=['scene', 'movie', 'gallery'],
         help='Type of scraped object (default is "scene").',
     )
     parser.add_argument(
