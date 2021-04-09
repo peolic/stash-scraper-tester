@@ -23,6 +23,13 @@ if not VERIFY_TLS:
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
+def is_image_valid(image: Optional[str]) -> str:
+    if not image:
+        return 'No'
+
+    return 'Yes' if image.startswith('data:') else 'Invalid'
+
+
 def show_image(image: str):
     try:
         from PIL import Image
@@ -401,7 +408,7 @@ def print_scene(scraped_scene: Dict[str, Any]) -> None:
     url: Optional[str] = scraped_scene.pop('url')
 
     image: Optional[str] = scraped_scene.pop('image')
-    image_p: str = 'Yes' if image else 'No'
+    image_p: str = is_image_valid(image)
 
     studio: Optional[Dict[Literal['name', 'url'], str]] = scraped_scene.pop('studio')
     studio_p = (studio.get('name'), studio.get('url')) if studio is not None else studio
@@ -434,7 +441,7 @@ def print_scene(scraped_scene: Dict[str, Any]) -> None:
         print('EXTRA DATA:')
         print(json.dumps(scraped_scene, sort_keys=True, indent=2))
 
-    if image and ask('\nShow image using default image viewer?', default=False):
+    if image and image.startswith('data:') and ask('\nShow image using default image viewer?', default=False):
         show_image(image)
 
 
@@ -453,9 +460,9 @@ def print_movie(scraped_movie: Dict[str, Any]) -> None:
     director: Optional[str] = scraped_movie.pop('director')
 
     front_image: Optional[str] = scraped_movie.pop('front_image')
-    front_image_p: str = 'Yes' if front_image else 'No'
+    front_image_p: str = is_image_valid(front_image)
     back_image: Optional[str] = scraped_movie.pop('back_image')
-    back_image_p: str = 'Yes' if back_image else 'No'
+    back_image_p: str = is_image_valid(back_image)
 
     studio: Optional[Dict[Literal['name', 'url'], str]] = scraped_movie.pop('studio')
     studio_p = (studio.get('name'), studio.get('url')) if studio is not None else studio
@@ -477,9 +484,9 @@ def print_movie(scraped_movie: Dict[str, Any]) -> None:
         print('EXTRA DATA:')
         print(json.dumps(scraped_movie, sort_keys=True, indent=2))
 
-    if front_image and ask('\nShow front image using default image viewer?', default=False):
+    if front_image and front_image.startswith('data:') and ask('\nShow front image using default image viewer?', default=False):
         show_image(front_image)
-    if back_image and ask('\nShow back image using default image viewer?', default=False):
+    if back_image and back_image.startswith('data:') and ask('\nShow back image using default image viewer?', default=False):
         show_image(back_image)
 
 
