@@ -163,6 +163,7 @@ class QueryScrapeSceneURL(GQLQuery):
 
                     movies {
                         name
+                        url
                     }
                 }
             }
