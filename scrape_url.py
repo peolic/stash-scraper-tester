@@ -149,6 +149,7 @@ class QueryScrapeSceneURL(GQLQuery):
 
                     studio {
                         name
+                        url
                     }
 
                     tags {
@@ -200,6 +201,7 @@ class QueryScrapeMovieURL(GQLQuery):
 
                     studio {
                         name
+                        url
                     }
 
                     front_image
@@ -237,6 +239,7 @@ class QueryScrapeGalleryURL(GQLQuery):
 
                     studio {
                         name
+                        url
                     }
 
                     tags {
